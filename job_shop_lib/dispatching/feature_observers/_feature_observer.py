@@ -68,7 +68,7 @@ class FeatureObserver(DispatcherObserver):
     _supported_feature_types = list(FeatureType)
 
     __slots__ = {
-        "features": (
+        "_features": (
             "A dictionary of numpy arrays with the features. "
             "Each key is a :class:`FeatureType` and each value is a numpy "
             "array with the features. The array has shape (``num_entities``, "
@@ -76,7 +76,9 @@ class FeatureObserver(DispatcherObserver):
             "entities being observed (e.g., operations, machines, or jobs) and"
             " ``feature_size`` is the number of values being observed for each"
             " entity."
-        )
+        ),
+        "_features_dirty": "A boolean flag to indicate if "
+        "features need recalculation.",
     }
 
     def __init__(
@@ -106,14 +108,34 @@ class FeatureObserver(DispatcherObserver):
             )
             for feature_type in feature_types
         }
-        self.features = {
+        self._features = {
             feature_type: np.zeros(
                 feature_dimensions[feature_type],
                 dtype=np.float32,
             )
             for feature_type in feature_types
         }
+        self._features_dirty = False
         self.initialize_features()
+
+    @property
+    def features(self) -> dict[FeatureType, np.ndarray]:
+        """A dictionary of numpy arrays with the features.
+
+        This property implements lazy evaluation. Features are only
+        recalculated when they are accessed and have been marked as dirty.
+        """
+        if self._features_dirty:
+            self._features_dirty = False
+            self.initialize_features()
+
+        return self._features
+
+    @features.setter
+    def features(self, value: dict[FeatureType, np.ndarray]):
+        """Setter to allow direct modification of features."""
+        self._features = value
+        self._features_dirty = False  # The new data is assumed to be current.
 
     @property
     def feature_sizes(self) -> dict[FeatureType, int]:
@@ -162,12 +184,12 @@ class FeatureObserver(DispatcherObserver):
             ScheduledOperation:
                 The operation that has been scheduled.
         """
-        self.initialize_features()
+        self._features_dirty = True
 
     def reset(self):
         """Sets features to zero and calls to :meth:``initialize_features``."""
         self.set_features_to_zero()
-        self.initialize_features()
+        self._features_dirty = True
 
     def set_features_to_zero(
         self, exclude: FeatureType | list[FeatureType] | None = None

@@ -90,6 +90,3 @@ class IsCompletedObserver(FeatureObserver):
 
     def reset(self):
         self.set_features_to_zero()
-
-    def update(self, scheduled_operation: ScheduledOperation):
-        self.initialize_features()
