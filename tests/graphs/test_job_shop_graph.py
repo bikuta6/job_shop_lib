@@ -169,15 +169,14 @@ def test_remove_node(example_job_shop_instance):
 
     # This part of the test remains valid as it uses the is_removed() helper
     graph.remove_isolated_nodes()
-    nx_graph = graph.get_networkx_graph()
-    isolated_nodes = list(nx.isolates(nx_graph))
+    isolated_nodes = list(nx.isolates(graph.get_networkx_graph()))
     assert not isolated_nodes
 
     # Verify the integrity of the remaining graph structure
     remaining_node_ids = {
         node.node_id for node in graph.nodes if not graph.is_removed(node)
     }
-    for u, v in nx_graph.edges():
+    for u, v in graph.get_networkx_graph().edges():
         assert u in remaining_node_ids
         assert v in remaining_node_ids
 

@@ -209,9 +209,6 @@ def plot_disjunctive_graph(
         )
     plt.title(title)
 
-    # Obtain job shop networkx graph
-    graph = job_shop_graph.get_networkx_graph()
-
     # Set up the layout
     # -----------------
     if layout is None:
@@ -219,12 +216,12 @@ def plot_disjunctive_graph(
             graphviz_layout, prog="dot", args="-Grankdir=LR"
         )
 
-    temp_graph = copy.deepcopy(graph)
+    temp_graph = copy.deepcopy(job_shop_graph.get_networkx_graph())
     # Remove disjunctive edges to get a better layout
     temp_graph.remove_edges_from(
         [
             (u, v)
-            for u, v, d in graph.edges(data=True)
+            for u, v, d in job_shop_graph.get_networkx_graph().edges(data=True)
             if d["type"][1] == EdgeType.DISJUNCTIVE.name
         ]
     )
@@ -275,7 +272,7 @@ def plot_disjunctive_graph(
             node_colors.append(machine_colors[machine_id])
 
     nx.draw_networkx_nodes(
-        graph,
+        job_shop_graph.get_networkx_graph(),
         pos,
         node_size=node_size,
         node_color=node_colors,
@@ -287,12 +284,12 @@ def plot_disjunctive_graph(
     # ----------
     conjunctive_edges = [
         (u, v)
-        for u, v, d in graph.edges(data=True)
+        for u, v, d in job_shop_graph.get_networkx_graph().edges(data=True)
         if d["type"][1] == EdgeType.CONJUNCTIVE.name
     ]
     disjunctive_edges: Iterable[tuple[int, int]] = [
         (u, v)
-        for u, v, d in graph.edges(data=True)
+        for u, v, d in job_shop_graph.get_networkx_graph().edges(data=True)
         if d["type"][1] == EdgeType.DISJUNCTIVE.name
     ]
     if conjunctive_edges_additional_params is None:
@@ -301,7 +298,7 @@ def plot_disjunctive_graph(
         disjunctive_edges_additional_params = {}
 
     nx.draw_networkx_edges(
-        graph,
+        job_shop_graph.get_networkx_graph(),
         pos,
         edgelist=conjunctive_edges,
         width=edge_width,
@@ -320,7 +317,7 @@ def plot_disjunctive_graph(
                 disjunctive_edges_filtered.add((u, v))
             disjunctive_edges = disjunctive_edges_filtered
         nx.draw_networkx_edges(
-            graph,
+            job_shop_graph.get_networkx_graph(),
             pos,
             edgelist=disjunctive_edges,
             width=edge_width,
@@ -347,7 +344,7 @@ def plot_disjunctive_graph(
         labels[operation_node] = operation_node_labeler(operation_node)
 
     nx.draw_networkx_labels(
-        graph,
+        job_shop_graph.get_networkx_graph(),
         pos,
         labels=labels,
         font_color=node_font_color,
